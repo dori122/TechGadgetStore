@@ -1,0 +1,148 @@
+@page "/cart"
+@using TechGadgetStore.Services
+@inject CartService CartService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+@implements IDisposable
+
+<PageTitle>Shopping Cart - TechGadgetStore</PageTitle>
+
+<div class="container mt-4">
+    <h2>Shopping Cart</h2>
+    <hr>
+
+    @if (!cartItems.Any())
+    {
+        <div class="alert alert-info text-center">
+            <h4>Your cart is empty</h4>
+            <p>Browse our products and add items to your cart!</p>
+            <button class="btn btn-primary" @onclick="GoToHome">
+                Continue Shopping
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-8">
+                @foreach (var item in cartItems)
+                {
+                    <div class="card mb-3">
+                        <div class="row g-0">
+                            <div class="col-md-3">
+                                <img src="@item.Product.ImageUrl" class="img-fluid rounded-start" alt="@item.Product.Name" style="height: 150px; object-fit: cover; width: 100%;">
+                            </div>
+                            <div class="col-md-9">
+                                <div class="card-body">
+                                    <h5 class="card-title">@item.Product.Name</h5>
+                                    <p class="card-text text-muted">@item.Product.Category?.Name</p>
+                                    
+                                    @if (item.Product.DiscountPrice.HasValue)
+                                    {
+                                        <p class="card-text">
+                                            <span class="text-decoration-line-through">$@item.Product.Price</span>
+                                            <span class="text-danger fw-bold ms-2">$@item.Product.DiscountPrice</span>
+                                        </p>
+                                    }
+                                    else
+                                    {
+                                        <p class="card-text fw-bold">$@item.Product.Price</p>
+                                    }
+
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="input-group" style="width: 150px;">
+                                            <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item.Product.Id, item.Quantity - 1)">-</button>
+                                            <input type="number" class="form-control text-center" value="@item.Quantity" readonly>
+                                            <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item.Product.Id, item.Quantity + 1)">+</button>
+                                        </div>
+                                        <button class="btn btn-danger btn-sm" @onclick="() => RemoveItem(item.Product.Id)">
+                                            Remove
+                                        </button>
+                                    </div>
+
+                                    <p class="card-text mt-2">
+                                        <small>Subtotal: <strong>$@GetItemSubtotal(item)</strong></small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Order Summary</h5>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Items (@CartService.GetCartCount()):</span>
+                            <span>$@CartService.GetCartTotal()</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Total:</strong>
+                            <strong>$@CartService.GetCartTotal()</strong>
+                        </div>
+                        <button class="btn btn-success w-100 mb-2">
+                            Proceed to Checkout
+                        </button>
+                        <button class="btn btn-outline-primary w-100" @onclick="GoToHome">
+                            Continue Shopping
+                        </button>
+                        <button class="btn btn-outline-danger w-100 mt-2" @onclick="ClearCart">
+                            Clear Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<CartItem> cartItems = new();
+
+    protected override void OnInitialized()
+    {
+        LoadCart();
+        CartService.OnCartChanged += LoadCart;
+    }
+
+    private void LoadCart()
+    {
+        cartItems = CartService.GetCartItems();
+        StateHasChanged();
+    }
+
+    private void UpdateQuantity(int productId, int quantity)
+    {
+        CartService.UpdateQuantity(productId, quantity);
+    }
+
+    private void RemoveItem(int productId)
+    {
+        CartService.RemoveFromCart(productId);
+    }
+
+    private void ClearCart()
+    {
+        CartService.ClearCart();
+    }
+
+    private void GoToHome()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private decimal GetItemSubtotal(CartItem item)
+    {
+        var price = item.Product.DiscountPrice ?? item.Product.Price;
+        return price * item.Quantity;
+    }
+
+    public void Dispose()
+    {
+        CartService.OnCartChanged -= LoadCart;
+    }
+}

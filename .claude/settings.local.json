@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"c:\\\\Users\\\\doril\\\\OneDrive\\\\Documents\\\\TechGadgetStore\\\\TechGadgetStore\\\\Components\")",
+      "Bash(dir \"c:\\\\Users\\\\doril\\\\OneDrive\\\\Documents\\\\TechGadgetStore\\\\TechGadgetStore\"\")",
+      "Bash(powershell:*)",
+      "Bash(cmd /c \"cd /d c:\\\\Users\\\\doril\\\\OneDrive\\\\Documents\\\\TechGadgetStore\\\\TechGadgetStore && type TechGadgetStore.csproj\")",
+      "Bash(bash:*)",
+      "Bash(echo $0)",
+      "Bash($PSVersionTable)",
+      "Bash(dir:*)",
+      "Bash(tree:*)"
+    ]
+  }
+}
