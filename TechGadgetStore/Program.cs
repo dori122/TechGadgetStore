@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using TechGadgetStore.Components;
 using TechGadgetStore.Data;
 using TechGadgetStore.Services;
+using TechGadgetStore.Interfaces;
+using TechGadgetStore.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,8 +14,13 @@ builder.Services.AddRazorComponents()
 // Add DbContext with PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-//Add cart service
-builder.Services.AddScoped<CartService>();
+
+// Register Repositories
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+
+// Register Services
+builder.Services.AddScoped<ICartService, CartService>();
 
 var app = builder.Build();
 

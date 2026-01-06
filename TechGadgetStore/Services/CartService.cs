@@ -1,8 +1,9 @@
 using TechGadgetStore.Models;
+using TechGadgetStore.Interfaces;
 
 namespace TechGadgetStore.Services;
 
-public class CartService
+public class CartService : ICartService
 {
     private List<CartItem> cartItems = new();
 

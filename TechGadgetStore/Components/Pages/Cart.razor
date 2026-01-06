@@ -1,6 +1,7 @@
 @page "/cart"
 @using TechGadgetStore.Services
-@inject CartService CartService
+@using TechGadgetStore.Interfaces
+@inject ICartService CartService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 @implements IDisposable

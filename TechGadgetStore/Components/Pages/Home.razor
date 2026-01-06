@@ -1,11 +1,9 @@
 ﻿@page "/"
-@using TechGadgetStore.Data
 @using TechGadgetStore.Models
-@using Microsoft.EntityFrameworkCore
-@using TechGadgetStore.Services
-@inject AppDbContext DbContext
+@using TechGadgetStore.Interfaces
+@inject IProductRepository ProductRepository
+@inject ICartService CartService
 @inject NavigationManager Navigation
-@inject CartService CartService
 @rendermode InteractiveServer
 
 <PageTitle>TechGadgetStore - Home</PageTitle>
@@ -107,10 +105,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        products = await DbContext.Products
-            .Include(p => p.Category)
-            .Where(p => p.StockQuantity > 0)
-            .ToListAsync();
+        var allProducts = await ProductRepository.GetInStockProductsAsync();
+        products = allProducts.ToList();
     }
 
     private string GetShortDescription(string description)

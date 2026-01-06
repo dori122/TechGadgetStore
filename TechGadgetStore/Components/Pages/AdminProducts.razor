@@ -1,8 +1,8 @@
 @page "/admin/products"
-@using TechGadgetStore.Data
 @using TechGadgetStore.Models
-@using Microsoft.EntityFrameworkCore
-@inject AppDbContext DbContext
+@using TechGadgetStore.Interfaces
+@inject IProductRepository ProductRepository
+@inject ICategoryRepository CategoryRepository
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
@@ -90,10 +90,14 @@
                 </div>
                 <div class="modal-body">
                     <EditForm Model="currentProduct" OnValidSubmit="SaveProduct">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" />
+                        
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Product Name</label>
                                 <InputText @bind-Value="currentProduct.Name" class="form-control" placeholder="Enter product name" />
+                                <ValidationMessage For="@(() => currentProduct.Name)" />
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Category</label>
@@ -104,29 +108,35 @@
                                         <option value="@category.Id">@category.Name</option>
                                     }
                                 </InputSelect>
+                                <ValidationMessage For="@(() => currentProduct.CategoryId)" />
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Description</label>
                             <InputTextArea @bind-Value="currentProduct.Description" class="form-control" rows="3" placeholder="Enter product description" />
+                            <ValidationMessage For="@(() => currentProduct.Description)" />
                         </div>
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Price ($)</label>
                                 <InputNumber @bind-Value="currentProduct.Price" class="form-control" placeholder="0.00" />
+                                <ValidationMessage For="@(() => currentProduct.Price)" />
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Discount Price ($)</label>
                                 <InputNumber @bind-Value="currentProduct.DiscountPrice" class="form-control" placeholder="Optional" />
+                                <ValidationMessage For="@(() => currentProduct.DiscountPrice)" />
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Stock Quantity</label>
                                 <InputNumber @bind-Value="currentProduct.StockQuantity" class="form-control" placeholder="0" />
+                                <ValidationMessage For="@(() => currentProduct.StockQuantity)" />
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Image URL</label>
                             <InputText @bind-Value="currentProduct.ImageUrl" class="form-control" placeholder="https://example.com/image.jpg" />
+                            <ValidationMessage For="@(() => currentProduct.ImageUrl)" />
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
@@ -153,8 +163,11 @@
 
     private async Task LoadData()
     {
-        products = await DbContext.Products.Include(p => p.Category).ToListAsync();
-        categories = await DbContext.Categories.ToListAsync();
+        var productsData = await ProductRepository.GetProductsWithCategoriesAsync();
+        products = productsData.ToList();
+        
+        var categoriesData = await CategoryRepository.GetAllAsync();
+        categories = categoriesData.ToList();
     }
 
     private void ShowAddModal()
@@ -191,7 +204,7 @@
     {
         if (isEditMode)
         {
-            var existingProduct = await DbContext.Products.FindAsync(currentProduct.Id);
+            var existingProduct = await ProductRepository.GetByIdAsync(currentProduct.Id);
             if (existingProduct != null)
             {
                 existingProduct.Name = currentProduct.Name;
@@ -201,26 +214,22 @@
                 existingProduct.StockQuantity = currentProduct.StockQuantity;
                 existingProduct.CategoryId = currentProduct.CategoryId;
                 existingProduct.ImageUrl = currentProduct.ImageUrl;
+                
+                await ProductRepository.UpdateAsync(existingProduct);
             }
         }
         else
         {
-            DbContext.Products.Add(currentProduct);
+            await ProductRepository.AddAsync(currentProduct);
         }
 
-        await DbContext.SaveChangesAsync();
         await LoadData();
         CloseModal();
     }
 
     private async Task DeleteProduct(int id)
     {
-        var product = await DbContext.Products.FindAsync(id);
-        if (product != null)
-        {
-            DbContext.Products.Remove(product);
-            await DbContext.SaveChangesAsync();
-            await LoadData();
-        }
+        await ProductRepository.DeleteAsync(id);
+        await LoadData();
     }
 }

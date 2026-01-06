@@ -1,10 +1,8 @@
 @page "/product/{id:int}"
-@using TechGadgetStore.Data
 @using TechGadgetStore.Models
-@using Microsoft.EntityFrameworkCore
-@using TechGadgetStore.Services
-@inject AppDbContext DbContext
-@inject CartService CartService
+@using TechGadgetStore.Interfaces
+@inject IProductRepository ProductRepository
+@inject ICartService CartService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
@@ -69,7 +67,7 @@
                 {
                     <div class="d-grid gap-2">
                         <button class="btn btn-success btn-lg" @onclick="AddToCart">
-                            Add to Cart 🛒
+                            Add to Cart
                         </button>
                         <button class="btn btn-outline-primary" @onclick="GoToHome">
                             Continue Shopping
@@ -84,7 +82,7 @@
                 @if (showNotification)
                 {
                     <div class="alert alert-success mt-3">
-                        ✅ Product added to cart!
+                        Product added to cart!
                     </div>
                 }
             </div>
@@ -101,9 +99,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        product = await DbContext.Products
-            .Include(p => p.Category)
-            .FirstOrDefaultAsync(p => p.Id == Id);
+        product = await ProductRepository.GetProductWithCategoryAsync(Id);
     }
 
     private void AddToCart()
